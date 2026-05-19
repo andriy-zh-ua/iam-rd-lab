@@ -1,13 +1,19 @@
-# iam-rd-lab
+# IAM-RD-Lab
 
-**Personal R&D Project** — a secure enterprise sign-in application using
-**React / Next.js** and the **Microsoft Authentication Library (MSAL)**,
-integrated with **Microsoft Entra ID**. Implements the **OAuth 2.0 / OpenID
-Connect authorization-code flow with PKCE**, access and refresh token
-lifecycle management, **Microsoft Graph API** integrations to retrieve user
-profile and group-membership data via delegated permissions, and
-**server-side JWT validation** against Microsoft's JWKS as the real security
-boundary.
+**Personal R&D Project** — a secure enterprise sign-in application built
+with **React / Next.js** and the **Microsoft Authentication Library
+(MSAL)**, integrated with **Microsoft Entra ID**.
+
+It demonstrates three things:
+
+- **Identity protocol implementation** — the OAuth 2.0 / OpenID Connect
+  authorization-code flow with PKCE, plus access and refresh token
+  lifecycle management in the browser.
+- **Resource API integration** — Microsoft Graph calls to retrieve user
+  profile and group-membership data via delegated permissions.
+- **Real security boundary** — server-side JWT validation against
+  Microsoft's JWKS in a Next.js Route Handler, so the server doesn't
+  have to trust the client's word about who the user is.
 
 ## What this app does
 
