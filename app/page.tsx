@@ -11,9 +11,10 @@ const primaryBtn =
   "h-11 rounded-full bg-zinc-900 dark:bg-zinc-50 text-white dark:text-zinc-900 hover:bg-zinc-700 dark:hover:bg-zinc-200 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed";
 
 export default function LoginPage() {
+  const router = useRouter(); // Get Next.js router for navigation
   const { instance, inProgress } = useMsal(); // Get MSAL instance and interaction state
   const isAuthenticated = useIsAuthenticated(); // Get authentication status
-  const router = useRouter(); // Get Next.js router for navigation
+  
   const isBusy = inProgress !== InteractionStatus.None; // Check if MSAL is busy
 
   // If user lands on / already authenticated (returned from sign-in redirect, or
@@ -21,7 +22,7 @@ export default function LoginPage() {
   useEffect(() => {
     if (isAuthenticated && inProgress === InteractionStatus.None) {
       // Automatically redirect to the dashboard when detection of authentication is complete
-      router.replace("/dashboard"); // Navigate to protected route
+      router.replace("/dashboard");
     }
   }, [isAuthenticated, inProgress, router]);
 
