@@ -4,8 +4,10 @@
 **React / Next.js** and the **Microsoft Authentication Library (MSAL)**,
 integrated with **Microsoft Entra ID**. Implements the **OAuth 2.0 / OpenID
 Connect authorization-code flow with PKCE**, access and refresh token
-lifecycle management, and **Microsoft Graph API** integrations to retrieve
-user profile and group-membership data via delegated permissions.
+lifecycle management, **Microsoft Graph API** integrations to retrieve user
+profile and group-membership data via delegated permissions, and
+**server-side JWT validation** against Microsoft's JWKS as the real security
+boundary.
 
 ## What this app does
 
@@ -26,6 +28,10 @@ user profile and group-membership data via delegated permissions.
    - **Get my groups** — call Microsoft Graph `GET /v1.0/me/memberOf` with the
      `GroupMember.Read.All` delegated permission, and render the JSON
      response.
+   - **Validate ID token (server)** — send the current ID token to a
+     Next.js Route Handler at `POST /api/validate`, which verifies the
+     JWT signature against Microsoft's JWKS and checks `iss` / `aud` /
+     `exp`. Returns the parsed claims if valid, `401` if not.
    - **Sign out** — clear the MSAL cache and log out at the IdP.
 
 ## Purpose
@@ -41,6 +47,8 @@ of enterprise identity flows:
 - Integration with Microsoft Graph using delegated permissions.
 - Separation of public (login) and protected (dashboard) routes in a
   Next.js App Router application.
+- Server-side JWT validation against the identity provider's JWKS — the
+  pattern any real backend uses to trust a token coming from the browser.
 
 ## Tech stack
 
@@ -50,7 +58,8 @@ of enterprise identity flows:
 | UI library | React **19.2.4** |
 | Language | TypeScript 5 |
 | Styling | Tailwind CSS v4 |
-| Auth | `@azure/msal-browser ^5.10.1`, `@azure/msal-react ^5.4.1` |
+| Auth (client) | `@azure/msal-browser ^5.10.1`, `@azure/msal-react ^5.4.1` |
+| Auth (server) | `jose ^6.2.3` (JWT signature & claim verification with remote JWKS) |
 | Identity provider | Microsoft Entra ID |
 | Identity protocols | OAuth 2.0, OpenID Connect, PKCE (S256) |
 | Resource API | Microsoft Graph v1.0 |
@@ -119,6 +128,55 @@ of enterprise identity flows:
                    })
 ```
 
+## How server-side token validation works
+
+```
+Browser (client)                          Next.js server                     Microsoft
+─────────────────                         ──────────────                     ──────────
+
+[click "Validate ID token (server)"]
+acquireTokenSilent({ scopes: ["User.Read"] })
+  → returns result.idToken (a JWT)
+
+fetch("/api/validate", {
+  method: "POST",
+  headers: { Authorization: `Bearer ${idToken}` }
+}) ─────────────────────────────────►   POST /api/validate
+                                            │
+                                            ▼
+                                         validateIdToken(token)
+                                            │
+                                            ▼  (fetched once, cached)
+                                         createRemoteJWKSet ───────────► /discovery/v2.0/keys
+                                                            ◄────────────  { keys: [...] }
+                                            │
+                                            ▼
+                                         jwtVerify(token, JWKS, {
+                                           issuer:   ".../{tenantId}/v2.0",
+                                           audience: clientId,
+                                         })
+                                            - verify signature (RS256)
+                                            - check iss matches our tenant
+                                            - check aud matches our app
+                                            - check exp / nbf
+                                            │
+                                            ▼
+                                         200 { ok: true, header, claims }
+                                         or 401 { ok: false, error }
+                     ◄──────────────────────
+```
+
+The trust boundary: the server doesn't trust the client's word about who
+the user is. It re-verifies the token's cryptographic signature against
+Microsoft's published signing keys, then checks the token was issued by
+*our* tenant for *our* application and is currently within its validity
+window. Anything that fails these checks gets a `401`.
+
+We validate the **ID token** (audience = our clientId, designed to be
+validated by our app) rather than the **access token** (audience =
+Microsoft Graph, designed to be validated by Graph). This is the
+documented Microsoft Identity pattern.
+
 ## Project structure
 
 ```
@@ -128,13 +186,17 @@ of enterprise identity flows:
 │   ├── page.tsx                # Login page; auto-redirects to /dashboard if signed in
 │   ├── providers.tsx           # Client-side MsalProvider wrapper
 │   ├── globals.css             # Tailwind base styles
+│   ├── api/
+│   │   └── validate/
+│   │       └── route.ts        # POST /api/validate — server-side JWT validation
 │   └── dashboard/
 │       ├── layout.tsx          # Wraps children in <AuthGuard>
-│       └── page.tsx            # Protected: token info, profile, groups, sign out
+│       └── page.tsx            # Protected: token info, profile, groups, validate, sign out
 ├── components/
 │   └── AuthGuard.tsx           # Redirects unauthenticated users to /
 ├── lib/
-│   └── msalConfig.ts           # MSAL Configuration + login scopes
+│   ├── msalConfig.ts           # MSAL Configuration + login scopes
+│   └── validateIdToken.ts      # Server-side JWT validator (jose + Microsoft JWKS)
 ├── .env                        # Local env vars (gitignored)
 ├── next.config.ts              # Next.js config (devIndicators off)
 ├── package.json
@@ -211,15 +273,13 @@ you should land on the `/dashboard` page.
 | Microsoft Graph — group membership (`GET /me/memberOf`) | ✅ Done (requires admin consent in your tenant) |
 | Delegated permissions model | ✅ Done |
 | Protected route with client-side guard | ✅ Done — `/dashboard` + `<AuthGuard>` |
+| Server-side JWT validation against Microsoft JWKS | ✅ Done — `POST /api/validate` + `lib/validateIdToken.ts` |
 
 ### Future improvements (out of original scope)
 
 These are deliberate non-goals for the initial R&D scope, listed here as
 candidates for follow-up work:
 
-- **Server-side token validation** — a Next.js API route that validates
-  access tokens against Microsoft's JWKS, providing a real security
-  boundary (the current AuthGuard is a UX guard, not a security boundary).
 - **Content-Security-Policy headers** — configured in `next.config.ts`.
 - **TypeScript types for Graph responses** — install
   `@microsoft/microsoft-graph-types` and type the response payloads.
@@ -236,10 +296,18 @@ candidates for follow-up work:
   the tab clears the cache and signs the user out. This is the more
   conservative choice; `localStorage` would persist tokens across tabs and
   browser restarts at a larger XSS blast radius.
-- The `AuthGuard` is a client-side UX guard, not a security boundary. The
-  security boundary is Microsoft Graph itself, which enforces the access
-  token on every call. Anyone with the rendered HTML can see the page
-  shell, but no data is exposed without a valid token.
+- **Two layers of trust boundary:**
+  - **Microsoft Graph** enforces the access token on every call (this is
+    the boundary for Graph data).
+  - **`POST /api/validate`** independently re-verifies the ID token's
+    signature against Microsoft's JWKS and checks `iss` / `aud` / `exp`.
+    This is the pattern any future protected API route in this app would
+    re-use: take the `Authorization: Bearer` header, call
+    `validateIdToken()`, branch on success/failure.
+- The `AuthGuard` is a **client-side UX guard**, not a security boundary.
+  It hides the dashboard UI from unauthenticated users but cannot stop
+  anyone from fetching the route's HTML. The actual data is protected by
+  the two boundaries above.
 - `.env` is gitignored (`/.env*` in `.gitignore`), so client IDs and tenant
   IDs are not committed.
 
