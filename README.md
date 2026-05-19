@@ -1,36 +1,257 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# iam-rd-lab
 
-## Getting Started
+**Personal R&D Project** — a secure enterprise sign-in application using
+**React / Next.js** and the **Microsoft Authentication Library (MSAL)**,
+integrated with **Microsoft Entra ID**. Implements the **OAuth 2.0 / OpenID
+Connect authorization-code flow with PKCE**, access and refresh token
+lifecycle management, and **Microsoft Graph API** integrations to retrieve
+user profile and group-membership data via delegated permissions.
 
-First, run the development server:
+## What this app does
+
+1. Lets a user sign in with their Microsoft Entra ID (work or school)
+   account from a Single Page Application.
+2. Performs the full OAuth 2.0 authorization-code flow with PKCE, entirely
+   client-side, against `login.microsoftonline.com`.
+3. Receives and caches an **access token**, **ID token**, and **refresh
+   token**. The MSAL library transparently refreshes access tokens when they
+   expire.
+4. Exposes a protected `/dashboard` route guarded by a client-side
+   `AuthGuard` component.
+5. From the dashboard, the user can:
+   - **Show token info** — inspect the current access token (preview, length,
+     scopes, expiry, cache hit/miss, account).
+   - **Get my profile** — call Microsoft Graph `GET /v1.0/me` with the access
+     token as a Bearer credential, and render the JSON response.
+   - **Get my groups** — call Microsoft Graph `GET /v1.0/me/memberOf` with the
+     `GroupMember.Read.All` delegated permission, and render the JSON
+     response.
+   - **Sign out** — clear the MSAL cache and log out at the IdP.
+
+## Purpose
+
+This is a learning / portfolio project demonstrating a working understanding
+of enterprise identity flows:
+
+- The OAuth 2.0 authorization-code flow with PKCE (the SPA-recommended flow
+  per RFC 7636).
+- OpenID Connect on top of OAuth 2.0 (ID token, scopes, claims).
+- Token lifecycle management in the browser (cache, silent refresh,
+  interactive consent fallback).
+- Integration with Microsoft Graph using delegated permissions.
+- Separation of public (login) and protected (dashboard) routes in a
+  Next.js App Router application.
+
+## Tech stack
+
+| Layer | Choice |
+|---|---|
+| Framework | Next.js **16.2.6** (App Router, Turbopack) |
+| UI library | React **19.2.4** |
+| Language | TypeScript 5 |
+| Styling | Tailwind CSS v4 |
+| Auth | `@azure/msal-browser ^5.10.1`, `@azure/msal-react ^5.4.1` |
+| Identity provider | Microsoft Entra ID |
+| Identity protocols | OAuth 2.0, OpenID Connect, PKCE (S256) |
+| Resource API | Microsoft Graph v1.0 |
+
+## How the authentication flow works
+
+```
+                    BROWSER                          MICROSOFT
+                    ─────────                        ──────────
+
+  1. Page load     Render /, MsalProvider initializes.
+
+  2. Click Sign In loginRedirect() generates:
+                     - random code_verifier (43-128 URL-safe chars)
+                     - code_challenge = base64url(SHA-256(verifier))
+                     - state, nonce
+                   Stores verifier in sessionStorage, then navigates to:
+
+                                  ──────────────►
+                                                 /oauth2/v2.0/authorize?
+                                                   client_id=...
+                                                   response_type=code
+                                                   redirect_uri=...
+                                                   scope=openid profile
+                                                         offline_access
+                                                         User.Read
+                                                   code_challenge=...
+                                                   code_challenge_method=S256
+                                                   state=..., nonce=...
+
+  3. At Microsoft                                User authenticates (+ MFA),
+                                                 first time: consent screen.
+                                                 IdP issues authorization code.
+
+                                  ◄──────── 302
+                                  /?code=...&state=...
+
+  4. Back at /     MsalProvider.handleRedirectPromise():
+                     - reads code from URL
+                     - reads verifier from sessionStorage
+                     - POSTs to /oauth2/v2.0/token:
+                         grant_type=authorization_code
+                         code=...
+                         code_verifier=...   ◄── PKCE proof
+                         redirect_uri=...
+
+                                  ──────────────►
+                                                 Validates SHA-256(verifier)
+                                                 equals stored challenge.
+
+                                  ◄──────── tokens
+                                  { access_token, id_token, refresh_token,
+                                    expires_in }
+
+  5. App finishes  Tokens cached in sessionStorage.
+                   useIsAuthenticated() returns true.
+                   useEffect on / redirects to /dashboard.
+
+  6. Calling Graph acquireTokenSilent({ scopes }) returns cached token,
+                   or uses the refresh token silently to get a new one,
+                   or throws InteractionRequiredAuthError → redirect for
+                   interactive consent.
+
+                   fetch('https://graph.microsoft.com/v1.0/me', {
+                     headers: { Authorization: `Bearer ${accessToken}` }
+                   })
+```
+
+## Project structure
+
+```
+.
+├── app/
+│   ├── layout.tsx              # Root layout (server component)
+│   ├── page.tsx                # Login page; auto-redirects to /dashboard if signed in
+│   ├── providers.tsx           # Client-side MsalProvider wrapper
+│   ├── globals.css             # Tailwind base styles
+│   └── dashboard/
+│       ├── layout.tsx          # Wraps children in <AuthGuard>
+│       └── page.tsx            # Protected: token info, profile, groups, sign out
+├── components/
+│   └── AuthGuard.tsx           # Redirects unauthenticated users to /
+├── lib/
+│   └── msalConfig.ts           # MSAL Configuration + login scopes
+├── .env                        # Local env vars (gitignored)
+├── next.config.ts              # Next.js config (devIndicators off)
+├── package.json
+└── tsconfig.json
+```
+
+## Setup
+
+### 1. Register an application in Microsoft Entra ID
+
+1. Azure Portal → **Microsoft Entra ID** → **App registrations** → **New
+   registration**.
+2. Supported account types: *Accounts in this organizational directory only*
+   (single tenant) is fine for an R&D project.
+3. Redirect URI: select **Single-page application (SPA)**, value
+   `http://localhost:3000`.
+4. After creation, note the **Application (client) ID** and **Directory
+   (tenant) ID**.
+
+### 2. Configure API permissions
+
+Under **API permissions** → **Add a permission** → **Microsoft Graph** →
+**Delegated permissions**:
+
+- `User.Read` (read user profile)
+- `GroupMember.Read.All` (read group memberships)
+
+Click **Grant admin consent for *YourTenant*** for both permissions. The
+groups permission requires an admin to grant consent.
+
+### 3. Clone and install
+
+```bash
+git clone https://github.com/<your-username>/iam-rd-lab.git
+cd iam-rd-lab
+npm install
+```
+
+### 4. Configure environment
+
+Create a `.env` file (already gitignored) at the project root:
+
+```env
+NEXT_PUBLIC_AZURE_CLIENT_ID=<your-application-client-id>
+NEXT_PUBLIC_AZURE_TENANT_ID=<your-directory-tenant-id>
+```
+
+The `NEXT_PUBLIC_` prefix is required — MSAL runs in the browser, so the
+values must be bundled into the client.
+
+### 5. Run the dev server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open <http://localhost:3000> in your browser. Click **Sign in with
+Microsoft**, complete the Microsoft login (and consent on first use), and
+you should land on the `/dashboard` page.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Implementation status
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Scope statement coverage
 
-## Learn More
+| Item | Status |
+|---|---|
+| Next.js + React + MSAL + TypeScript scaffold | ✅ Done |
+| Entra ID configuration (clientId, tenantId, authority) | ✅ Done |
+| Sign-in UI (login page) | ✅ Done |
+| OAuth 2.0 / OIDC authorization-code flow with PKCE | ✅ Verified end-to-end |
+| Access token lifecycle (acquire, cache, display) | ✅ Done — `acquireTokenSilent` + UI display |
+| Refresh token lifecycle (silent renewal) | ✅ Done — handled by MSAL; cache hits surfaced in UI |
+| Microsoft Graph — user profile (`GET /me`) | ✅ Done |
+| Microsoft Graph — group membership (`GET /me/memberOf`) | ✅ Done (requires admin consent in your tenant) |
+| Delegated permissions model | ✅ Done |
+| Protected route with client-side guard | ✅ Done — `/dashboard` + `<AuthGuard>` |
 
-To learn more about Next.js, take a look at the following resources:
+### Future improvements (out of original scope)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+These are deliberate non-goals for the initial R&D scope, listed here as
+candidates for follow-up work:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **Server-side token validation** — a Next.js API route that validates
+  access tokens against Microsoft's JWKS, providing a real security
+  boundary (the current AuthGuard is a UX guard, not a security boundary).
+- **Content-Security-Policy headers** — configured in `next.config.ts`.
+- **TypeScript types for Graph responses** — install
+  `@microsoft/microsoft-graph-types` and type the response payloads.
+- **Per-button loading states** and polished error UX (currently raw JSON).
+- **Multi-account support** — the code currently uses `accounts[0]`.
+- **Live token expiry countdown** in the UI.
+- **Conditional Access claims-challenge handling** for Graph responses.
+- **Audit logging** of sign-in / sign-out events.
+- **Tests**.
 
-## Deploy on Vercel
+## Security notes
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Tokens are cached in `sessionStorage`, scoped to the current tab. Closing
+  the tab clears the cache and signs the user out. This is the more
+  conservative choice; `localStorage` would persist tokens across tabs and
+  browser restarts at a larger XSS blast radius.
+- The `AuthGuard` is a client-side UX guard, not a security boundary. The
+  security boundary is Microsoft Graph itself, which enforces the access
+  token on every call. Anyone with the rendered HTML can see the page
+  shell, but no data is exposed without a valid token.
+- `.env` is gitignored (`/.env*` in `.gitignore`), so client IDs and tenant
+  IDs are not committed.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Scripts
+
+| Command | Effect |
+|---|---|
+| `npm run dev` | Start the Next.js dev server (Turbopack) on port 3000 |
+| `npm run build` | Production build |
+| `npm run start` | Run the production build |
+| `npm run lint` | ESLint |
+
+## License
+
+Personal project — no license assigned.
