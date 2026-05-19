@@ -22,8 +22,10 @@ It demonstrates three things:
 2. Performs the full OAuth 2.0 authorization-code flow with PKCE, entirely
    client-side, against `login.microsoftonline.com`.
 3. Receives and caches an **access token**, **ID token**, and **refresh
-   token**. The MSAL library transparently refreshes access tokens when they
-   expire.
+   token**. Uses `acquireTokenSilent` for normal retrieval (cache → silent
+   refresh via refresh token), and falls back to `acquireTokenRedirect`
+   **interactive-consent flow** when MSAL throws `InteractionRequiredAuthError`
+   (new scope requested, MFA required, conditional access claims challenge).
 4. Exposes a protected `/dashboard` route guarded by a client-side
    `AuthGuard` component.
 5. From the dashboard, the user can:
