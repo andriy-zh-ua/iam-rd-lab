@@ -12,6 +12,11 @@ export default function Home() {
   const handleSignIn = async () => {
     if (isBusy) return;
     try {
+      // Generates a random code_verifier (43–128 URL-safe chars), 
+      // computes SHA-256(verifier), 
+      // base64url-encodes the resulting 32-byte hash to produce the code_challenge (~43 chars), 
+      // and sends the challenge to Microsoft's /authorize endpoint. 
+      // The verifier is kept in sessionStorage and sent later, when the authorization code is exchanged for tokens at /token.
       await instance.loginRedirect(loginRequest);
     } catch (err) {
       const code = (err as { errorCode?: string })?.errorCode;
