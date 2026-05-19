@@ -109,6 +109,31 @@ export default function Dashboard() {
     }
   };
 
+  // Server-side ID token validation.
+  // Sends the current ID token (a JWT issued by Entra ID with audience=clientId)
+  // to our /api/validate route. The server verifies the signature against
+  // Microsoft's JWKS and checks iss/aud/exp — i.e., trust-the-token-from-scratch
+  // rather than trust-the-client's-word.
+  const validateServerSide = async () => {
+    setError(null);
+    setOutput(null);
+    try {
+      const r = await getToken(["User.Read"]);
+      if (!r.idToken) throw new Error("No ID token available from MSAL");
+      const res = await fetch("/api/validate", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${r.idToken}` },
+      });
+      const data = await res.json();
+      setOutput({
+        label: `Server-side ID token validation (HTTP ${res.status})`,
+        data,
+      });
+    } catch (e) {
+      setError(String(e));
+    }
+  };
+
   return (
     <main className="flex flex-1 items-center justify-center bg-zinc-50 dark:bg-black p-6">
       <div className="w-full max-w-2xl rounded-2xl bg-white dark:bg-zinc-900 p-8 shadow-sm border border-zinc-200 dark:border-zinc-800 flex flex-col gap-6">
@@ -146,9 +171,16 @@ export default function Dashboard() {
             Get my groups
           </button>
           <button
+            onClick={validateServerSide}
+            disabled={isBusy}
+            className={secondaryBtn}
+          >
+            Validate ID token (server)
+          </button>
+          <button
             onClick={handleSignOut}
             disabled={isBusy}
-            className={primaryBtn}
+            className={`${primaryBtn} sm:col-span-2`}
           >
             {isBusy ? "Working…" : "Sign out"}
           </button>
