@@ -2,24 +2,26 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useMsal, useIsAuthenticated } from "@azure/msal-react";
 import { InteractionStatus } from "@azure/msal-browser";
+import { useMsal, useIsAuthenticated } from "@azure/msal-react";
+
 import { loginRequest } from "@/lib/msalConfig";
 
 const primaryBtn =
   "h-11 rounded-full bg-zinc-900 dark:bg-zinc-50 text-white dark:text-zinc-900 hover:bg-zinc-700 dark:hover:bg-zinc-200 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed";
 
 export default function LoginPage() {
-  const { instance, inProgress } = useMsal();
-  const isAuthenticated = useIsAuthenticated();
-  const router = useRouter();
-  const isBusy = inProgress !== InteractionStatus.None;
+  const { instance, inProgress } = useMsal(); // Get MSAL instance and interaction state
+  const isAuthenticated = useIsAuthenticated(); // Get authentication status
+  const router = useRouter(); // Get Next.js router for navigation
+  const isBusy = inProgress !== InteractionStatus.None; // Check if MSAL is busy
 
   // If user lands on / already authenticated (returned from sign-in redirect, or
   // navigated here while signed in), bounce them to /dashboard.
   useEffect(() => {
     if (isAuthenticated && inProgress === InteractionStatus.None) {
-      router.replace("/dashboard");
+      // Automatically redirect to the dashboard when detection of authentication is complete
+      router.replace("/dashboard"); // Navigate to protected route
     }
   }, [isAuthenticated, inProgress, router]);
 
