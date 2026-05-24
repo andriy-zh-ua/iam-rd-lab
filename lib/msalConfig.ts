@@ -12,8 +12,7 @@ export const msalConfig: Configuration = {
       typeof window !== "undefined" ? window.location.origin : "/",
   },
   cache: {
-    cacheLocation: "sessionStorage",
-    storeAuthStateInCookie: false,
+    cacheLocation: "sessionStorage" as const,
   },
 };
 
