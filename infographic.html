@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>IAM-RD-Lab — Project Infographic</title>
+<style>
+  /* ── Print setup ─────────────────────────────────────────────────────── */
+  @page { size: Letter portrait; margin: 0.3in 0.25in; }
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    box-sizing: border-box;
+  }
+  html, body {
+    margin: 0; padding: 0;
+    background: #fafafa;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: #111827; line-height: 1.4; font-size: 10pt;
+  }
+  body { display: flex; justify-content: center; padding: 24px 0; }
+  .page {
+    width: 8in; background: white;
+    border-radius: 16px; padding: 24px 26px 22px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  @media print {
+    body { padding: 0; background: white; }
+    .page { width: 100%; border-radius: 0; padding: 0; box-shadow: none; }
+  }
+
+  /* ── Hero ────────────────────────────────────────────────────────────── */
+  .hero h1 {
+    font-size: 20pt; font-weight: 800;
+    margin: 0 0 8px; color: #0f172a;
+    letter-spacing: -0.01em;
+  }
+  .hero p { margin: 6px 0; color: #1f2937; }
+  .hero strong { font-weight: 700; color: #0f172a; }
+  .checks { list-style: none; padding: 0; margin: 8px 0 12px; }
+  .checks li {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 5px 10px;
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    border-radius: 8px;
+    margin-bottom: 5px;
+    font-size: 9.5pt;
+  }
+  .checks li::before {
+    content: "✓"; flex: 0 0 18px; height: 18px;
+    background: #10b981; color: white;
+    border-radius: 4px; font-weight: 700; font-size: 11pt;
+    text-align: center; line-height: 18px;
+  }
+  .meta { font-size: 9pt; color: #374151; margin-top: 8px; }
+  .meta a { color: #2563eb; text-decoration: none; font-weight: 600; }
+  .hashtags { font-size: 8.5pt; color: #6366f1; margin-top: 4px; font-weight: 500; }
+
+  /* ── Diagram section ───────────────────────────────────────────────────── */
+  .diagram { margin-top: 20px; }
+  .diagram-header {
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  .diagram-header .title {
+    font-size: 13pt; font-weight: 800; color: #0f172a;
+    letter-spacing: -0.005em;
+  }
+  .diagram-header .sub {
+    font-size: 9pt; color: #475569; margin-top: 3px;
+  }
+
+  /* Top row: User | arrows | Entra | arrows | Graph */
+  .top-row {
+    display: grid;
+    grid-template-columns: 1.05fr 0.85fr 1.05fr 0.85fr 1.05fr;
+    gap: 4px;
+    align-items: stretch;
+    margin-bottom: 18px;
+  }
+
+  /* Bottom row: spacer-with-arrows | Server | arrows | JWKS */
+  .bottom-row {
+    display: grid;
+    grid-template-columns: 0.95fr 1.7fr 0.7fr 1.1fr;
+    gap: 4px;
+    align-items: stretch;
+  }
+
+  /* ── Boxes ────────────────────────────────────────────────────────────── */
+  .box {
+    border-radius: 14px;
+    border: 1.5px solid;
+    padding: 12px 12px 14px;
+    display: flex; flex-direction: column;
+    position: relative;
+  }
+  .box .box-title {
+    font-size: 10.5pt; font-weight: 800;
+    margin-bottom: 1px;
+    letter-spacing: -0.005em;
+  }
+  .box .box-sub {
+    font-size: 8pt; font-weight: 600; opacity: 0.85;
+    margin-bottom: 8px;
+  }
+  .box ul { margin: 6px 0 0; padding-left: 14px; font-size: 8.5pt; }
+  .box ul li { margin: 2px 0; }
+
+  .box.user   { background: #eff6ff; border-color: #93c5fd; color: #1e3a8a; }
+  .box.idp    { background: #f5f3ff; border-color: #c4b5fd; color: #4c1d95; }
+  .box.graph  { background: #ecfdf5; border-color: #6ee7b7; color: #065f46; }
+  .box.server { background: #fff7ed; border-color: #fdba74; color: #7c2d12; }
+  .box.jwks   { background: #eff6ff; border-color: #93c5fd; color: #1e3a8a; }
+
+  /* ── Box content elements ────────────────────────────────────────────── */
+  .browser-mock {
+    width: 100%; max-width: 150px;
+    margin: 6px auto 4px;
+    display: block;
+  }
+  .person-icon {
+    width: 34px; height: 34px;
+    margin: 8px auto 0;
+    display: block;
+  }
+  .entra-icon, .graph-icon {
+    width: 70px; height: 70px;
+    margin: 8px auto 4px;
+    display: block;
+  }
+  .center-label {
+    text-align: center;
+    font-size: 9.5pt; font-weight: 700;
+    margin: 0 0 8px;
+  }
+  .graph-apis-label {
+    text-align: center;
+    font-size: 10pt; font-weight: 700;
+    margin: 6px 0 6px;
+    color: #065f46;
+  }
+  .endpoint-card {
+    background: white;
+    border: 1.5px solid #6ee7b7;
+    border-radius: 8px;
+    padding: 6px 8px;
+    margin: 4px 0;
+    font-size: 8.5pt;
+    text-align: center;
+    color: #065f46;
+  }
+  .endpoint-card .ep {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-weight: 700; font-size: 8.5pt;
+  }
+  .endpoint-card .ep-sub {
+    font-size: 7.5pt; opacity: 0.8; margin-top: 1px;
+  }
+
+  /* Server box — Next.js + lock visual */
+  .next-lock-row {
+    display: flex; align-items: center; justify-content: center;
+    gap: 14px;
+    margin: 4px 0 8px;
+  }
+  .nextjs-wordmark {
+    font-family: -apple-system, system-ui, sans-serif;
+    font-weight: 900;
+    font-size: 16pt;
+    color: #000;
+    letter-spacing: -0.04em;
+  }
+  .nextjs-wordmark .js { font-size: 8pt; vertical-align: super; font-weight: 700; }
+  .lock-badge {
+    width: 26px; height: 26px;
+    background: #1e40af;
+    border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: white;
+  }
+  .server-endpoint {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 9pt; font-weight: 700;
+    text-align: center;
+    margin: 2px 0 6px;
+  }
+
+  /* JWKS box — Microsoft logo + key */
+  .ms-row {
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px;
+    margin: 4px 0 8px;
+  }
+  .ms-logo { display: inline-block; }
+  .ms-wordmark {
+    font-size: 13pt; font-weight: 600;
+    color: #5e5e5e; letter-spacing: -0.01em;
+  }
+  .jwks-path {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 8pt;
+    text-align: center;
+    color: #1e3a8a;
+    margin: 2px 0 8px;
+    word-break: break-all;
+  }
+  .key-row {
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px;
+    margin: 6px 0 0;
+  }
+  .key-label { font-weight: 700; font-size: 9pt; }
+
+  /* ── Arrows ──────────────────────────────────────────────────────────── */
+  .arrows-col {
+    display: flex; flex-direction: column;
+    justify-content: center;
+    gap: 14px;
+    padding: 8px 2px;
+  }
+  .arrow {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 2px;
+    font-size: 7.8pt; color: #1f2937;
+    line-height: 1.25;
+  }
+  .arrow .text {
+    text-align: center;
+    font-weight: 600;
+    padding: 0 2px;
+  }
+  .arrow svg { width: 100%; height: 14px; }
+  .arrow-stroke { stroke: #1f2937; stroke-width: 1; fill: none; }
+  .arrow-head   { fill: #0f172a; }
+  .arrow-dashed { stroke-dasharray: 4 3; }
+
+  /* ── Bottom panels ───────────────────────────────────────────────────── */
+  .bottom {
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    gap: 14px;
+    margin-top: 18px;
+  }
+  .panel { border-radius: 10px; padding: 14px 16px; }
+  .panel h2 {
+    margin: 0 0 10px;
+    font-size: 12pt; font-weight: 700; letter-spacing: -0.005em;
+  }
+  .panel.features { background: #0f2342; color: #f3f4f6; }
+  .panel.features h2 { color: white; }
+  .panel.features ul { list-style: none; padding: 0; margin: 0; }
+  .panel.features li {
+    display: flex; align-items: flex-start; gap: 8px;
+    margin: 6px 0; font-size: 9pt;
+  }
+  .panel.features li::before {
+    content: "✓"; flex: 0 0 16px; height: 16px;
+    background: #10b981; color: white;
+    border-radius: 4px;
+    font-weight: 700; font-size: 9.5pt;
+    text-align: center; line-height: 16px;
+  }
+  .panel.stack { background: white; border: 1px solid #e5e7eb; }
+  .stack-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: repeat(5, auto);
+    grid-auto-flow: column;
+    gap: 8px 16px;
+    font-size: 9.5pt;
+  }
+  .stack-item { display: flex; align-items: center; gap: 10px; }
+  .stack-icon {
+    flex: 0 0 30px; width: 30px; height: 30px;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .stack-icon svg, .stack-icon img { display: block; max-width: 100%; max-height: 100%; object-fit: contain; }
+  .stack-icon.wide { flex: 0 0 40px; width: 40px; }
+  .entra-icon, .graph-icon { object-fit: contain; }
+
+  /* ── Footer ──────────────────────────────────────────────────────────── */
+  .footer {
+    margin-top: 16px;
+    background: #fff1f2;
+    border: 1px solid #fecdd3;
+    border-radius: 10px;
+    padding: 14px 16px;
+    text-align: center;
+  }
+  .footer .head {
+    font-size: 12pt; font-weight: 800; color: #881337;
+    letter-spacing: -0.005em;
+  }
+  .footer .head::before { content: "🛡  "; }
+  .footer .body {
+    margin-top: 4px; font-size: 9pt; color: #4c0519; line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<!-- ─── Reusable SVG defs ─────────────────────────────────────────────────── -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- Arrowhead marker for right-pointing arrows -->
+    <marker id="ah-right" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#0f172a"/>
+    </marker>
+    <!-- Arrowhead for left-pointing -->
+    <marker id="ah-left" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto">
+      <path d="M10,0 L0,5 L10,10 z" fill="#0f172a"/>
+    </marker>
+    <!-- Entra ID diamond gradient -->
+    <linearGradient id="entraGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%"  stop-color="#50e6ff"/>
+      <stop offset="55%" stop-color="#2493ee"/>
+      <stop offset="100%" stop-color="#0040a3"/>
+    </linearGradient>
+    <!-- Graph polyhedron gradient -->
+    <linearGradient id="graphGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%"  stop-color="#50e6ff"/>
+      <stop offset="100%" stop-color="#0078d4"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<div class="page">
+
+  <!-- ── HERO ──────────────────────────────────────────────────────────── -->
+  <header class="hero">
+    <h1>🚀 Project Completed: IAM-RD-Lab</h1>
+    <p>
+      Excited to share the completion of <strong>IAM-RD-Lab</strong>, a personal R&amp;D project — a secure enterprise sign-in application built with Next.js, React, and the Microsoft Authentication Library (MSAL), integrated with Microsoft Entra ID.
+    </p>
+    <p style="margin-top:8px; font-weight:600; color:#0f172a;">
+      This project demonstrates my hands-on understanding of enterprise identity:
+    </p>
+    <ul class="checks">
+      <li>OAuth 2.0 / OpenID Connect authorization-code flow with PKCE</li>
+      <li>Token lifecycle management in the browser (cache, silent refresh, interactive fallback)</li>
+      <li>Microsoft Graph integration (user profile &amp; group memberships)</li>
+      <li>Real security boundary: server-side JWT validation against Microsoft&apos;s JWKS in Next.js</li>
+    </ul>
+    <p>
+      It&apos;s a practical example of how modern web apps can securely manage identity while respecting the true trust boundaries between client, server, and identity provider.
+    </p>
+    <p class="meta">
+      🔗 GitHub: <a href="https://github.com/andriy-zh-ua/iam-rd-lab">github.com/andriy-zh-ua/iam-rd-lab</a>
+    </p>
+    <p class="hashtags">
+      #Identity &nbsp; #OAuth2 &nbsp; #OIDC &nbsp; #PKCE &nbsp; #MicrosoftEntraID &nbsp; #Nextjs &nbsp; #React &nbsp; #TypeScript &nbsp; #MicrosoftGraph
+    </p>
+  </header>
+
+  <!-- ── DIAGRAM ────────────────────────────────────────────────────────── -->
+  <section class="diagram">
+    <div class="diagram-header">
+      <div class="title">🔒 IAM-RD-Lab — Secure Enterprise Sign-In with Microsoft Entra ID</div>
+      <div class="sub">OAuth 2.0 + OpenID Connect (PKCE) &nbsp;·&nbsp; Microsoft Graph &nbsp;·&nbsp; Server-side JWT Validation</div>
+    </div>
+
+    <!-- ░░░ TOP ROW: 3 boxes + 2 arrow columns ░░░ -->
+    <div class="top-row">
+
+      <!-- 1. User (Browser) -->
+      <div class="box user">
+        <div class="box-title">1. User (Browser)</div>
+        <div class="box-sub">Next.js + React SPA</div>
+
+        <!-- Browser mockup with React + NEXT.js logos -->
+        <svg class="browser-mock" viewBox="0 0 200 90" xmlns="http://www.w3.org/2000/svg">
+          <rect x="1" y="1" width="198" height="88" rx="6" fill="white" stroke="#94a3b8" stroke-width="1.2"/>
+          <rect x="1" y="1" width="198" height="16" rx="6" fill="#e2e8f0"/>
+          <rect x="1" y="11" width="198" height="6" fill="#e2e8f0"/>
+          <circle cx="11" cy="9" r="2.5" fill="#ef4444"/>
+          <circle cx="20" cy="9" r="2.5" fill="#f59e0b"/>
+          <circle cx="29" cy="9" r="2.5" fill="#10b981"/>
+          <!-- React atom -->
+          <g transform="translate(58 53)">
+            <circle r="3" fill="#61dafb"/>
+            <ellipse rx="18" ry="6.5" fill="none" stroke="#61dafb" stroke-width="1.4"/>
+            <ellipse rx="18" ry="6.5" fill="none" stroke="#61dafb" stroke-width="1.4" transform="rotate(60)"/>
+            <ellipse rx="18" ry="6.5" fill="none" stroke="#61dafb" stroke-width="1.4" transform="rotate(120)"/>
+          </g>
+          <!-- NEXT.JS wordmark -->
+          <text x="98" y="59" font-family="-apple-system, system-ui, sans-serif" font-size="20" font-weight="900" fill="#000" letter-spacing="-1.2">NEXT</text>
+          <text x="166" y="65" font-family="-apple-system, system-ui, sans-serif" font-size="9" font-weight="700" fill="#000">.JS</text>
+        </svg>
+
+        <ul>
+          <li>Sign in with Microsoft</li>
+          <li>Token management (MSAL)</li>
+          <li>Call Microsoft Graph</li>
+          <li>Protected routes</li>
+        </ul>
+
+        <!-- Person icon -->
+        <svg class="person-icon" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="20" cy="20" r="19" fill="#1e40af"/>
+          <circle cx="20" cy="15" r="6" fill="white"/>
+          <path d="M8 33 C 10 25, 30 25, 32 33 L 8 33 Z" fill="white"/>
+        </svg>
+      </div>
+
+      <!-- arrows: User ↔ Entra -->
+      <div class="arrows-col">
+        <div class="arrow">
+          <div class="text">1. Sign in (Redirect)</div>
+          <svg viewBox="0 0 100 8" preserveAspectRatio="none"><line class="arrow-stroke" x1="0" y1="4" x2="98" y2="4" marker-end="url(#ah-right)"/></svg>
+        </div>
+        <div class="arrow">
+          <div class="text">2. Auth Code + PKCE</div>
+          <svg viewBox="0 0 100 8" preserveAspectRatio="none"><line class="arrow-stroke" x1="2" y1="4" x2="100" y2="4" marker-start="url(#ah-left)"/></svg>
+        </div>
+        <div class="arrow">
+          <div class="text">3. Token Request<br>+ Code Verifier</div>
+          <svg viewBox="0 0 100 8" preserveAspectRatio="none"><line class="arrow-stroke" x1="0" y1="4" x2="98" y2="4" marker-end="url(#ah-right)"/></svg>
+        </div>
+        <div class="arrow">
+          <div class="text">4. Tokens (AT, IDT, RT)</div>
+          <svg viewBox="0 0 100 8" preserveAspectRatio="none"><line class="arrow-stroke" x1="2" y1="4" x2="100" y2="4" marker-start="url(#ah-left)"/></svg>
+        </div>
+      </div>
+
+      <!-- 2. Microsoft Entra ID -->
+      <div class="box idp">
+        <div class="box-title">2. Microsoft Entra ID</div>
+        <div class="box-sub">(Identity Provider)</div>
+
+        <!-- Microsoft Entra ID — official logo -->
+        <img class="entra-icon" src="infographic-assets/entra-id-logo.png" alt="Microsoft Entra ID">
+
+        <div class="center-label" style="color:#4c1d95;">Microsoft Entra ID</div>
+
+        <ul>
+          <li>Authenticate user<br>(MFA / Conditional Access)</li>
+          <li>Issue authorization code</li>
+          <li>Validate PKCE</li>
+          <li>Issue tokens<br>(Access, ID, Refresh)</li>
+        </ul>
+      </div>
+
+      <!-- arrows: Entra ↔ Graph -->
+      <div class="arrows-col">
+        <div class="arrow">
+          <div class="text">5. API Call with<br>Access Token</div>
+          <svg viewBox="0 0 100 8" preserveAspectRatio="none"><line class="arrow-stroke" x1="0" y1="4" x2="98" y2="4" marker-end="url(#ah-right)"/></svg>
+        </div>
+        <div class="arrow">
+          <div class="text">6. API Response<br>(JSON)</div>
+          <svg viewBox="0 0 100 8" preserveAspectRatio="none"><line class="arrow-stroke" x1="2" y1="4" x2="100" y2="4" marker-start="url(#ah-left)"/></svg>
+        </div>
+      </div>
+
+      <!-- 3. Microsoft Graph -->
+      <div class="box graph">
+        <div class="box-title">3. Microsoft Graph</div>
+        <div class="box-sub">(Resource API)</div>
+
+        <!-- Microsoft Graph — official logo -->
+        <img class="graph-icon" src="infographic-assets/graph-logo.png" alt="Microsoft Graph">
+
+        <div class="center-label" style="color:#065f46;">Microsoft Graph</div>
+
+        <div class="graph-apis-label">APIs</div>
+        <div class="endpoint-card">
+          <div class="ep">GET /v1.0/me</div>
+          <div class="ep-sub">(User Profile)</div>
+        </div>
+        <div class="endpoint-card">
+          <div class="ep">GET /v1.0/me/memberOf</div>
+          <div class="ep-sub">(Group Memberships)</div>
+        </div>
+      </div>
+
+    </div>
+    <!-- ░░░ /TOP ROW ░░░ -->
+
+
+    <!-- ░░░ BOTTOM ROW: arrows-out-left | Server | arrows | JWKS ░░░ -->
+    <div class="bottom-row">
+
+      <!-- Arrows pointing left (Server → User above) -->
+      <div class="arrows-col">
+        <div class="arrow">
+          <div class="text">7. Send ID Token<br>(Validate)</div>
+          <svg viewBox="0 0 100 8" preserveAspectRatio="none"><line class="arrow-stroke" x1="2" y1="4" x2="100" y2="4" marker-start="url(#ah-left)"/></svg>
+        </div>
+        <div class="arrow">
+          <div class="text">8. Validation Result<br>(Claims or 401)</div>
+          <svg viewBox="0 0 100 8" preserveAspectRatio="none"><line class="arrow-stroke" x1="2" y1="4" x2="100" y2="4" marker-start="url(#ah-left)"/></svg>
+        </div>
+      </div>
+
+      <!-- 4. Next.js Server -->
+      <div class="box server">
+        <div class="box-title">4. Next.js Server <span style="font-weight:600; opacity:0.85;">(Trust Boundary)</span></div>
+
+        <div class="next-lock-row">
+          <span class="nextjs-wordmark">NEXT<span class="js">.JS</span></span>
+          <span class="lock-badge">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="white" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 1a5 5 0 0 0-5 5v4H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2h-1V6a5 5 0 0 0-5-5zm-3 9V6a3 3 0 0 1 6 0v4H9z"/>
+            </svg>
+          </span>
+        </div>
+
+        <div class="server-endpoint">POST /api/validate</div>
+        <ul style="padding-left:18px;">
+          <li>Receives ID Token (JWT)</li>
+          <li>Fetches Microsoft JWKS</li>
+          <li>Verifies signature (RS256)</li>
+          <li>Validates <code>iss</code>, <code>aud</code>, <code>exp</code></li>
+          <li>Returns claims or 401</li>
+        </ul>
+      </div>
+
+      <!-- Arrows: Server ↔ JWKS -->
+      <div class="arrows-col">
+        <div class="arrow">
+          <div class="text">Fetch JWKS<br>(cached)</div>
+          <svg viewBox="0 0 100 8" preserveAspectRatio="none"><line class="arrow-stroke" x1="0" y1="4" x2="98" y2="4" marker-end="url(#ah-right)"/></svg>
+        </div>
+        <div class="arrow">
+          <div class="text">&nbsp;</div>
+          <svg viewBox="0 0 100 8" preserveAspectRatio="none"><line class="arrow-stroke arrow-dashed" x1="2" y1="4" x2="100" y2="4" marker-start="url(#ah-left)"/></svg>
+        </div>
+      </div>
+
+      <!-- Microsoft JWKS -->
+      <div class="box jwks">
+        <div class="ms-row">
+          <!-- Microsoft 4-color squares -->
+          <svg class="ms-logo" viewBox="0 0 23 23" width="22" height="22" xmlns="http://www.w3.org/2000/svg">
+            <rect x="0"  y="0"  width="10" height="10" fill="#f25022"/>
+            <rect x="13" y="0"  width="10" height="10" fill="#7fba00"/>
+            <rect x="0"  y="13" width="10" height="10" fill="#00a4ef"/>
+            <rect x="13" y="13" width="10" height="10" fill="#ffb900"/>
+          </svg>
+          <span class="ms-wordmark">Microsoft</span>
+        </div>
+
+        <div class="jwks-path">
+          /.well-known/openid-<br>configuration/v2.0/keys
+        </div>
+
+        <div class="key-row">
+          <!-- Key icon -->
+          <svg viewBox="0 0 24 24" width="28" height="28" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="8" cy="12" r="5" fill="none" stroke="#1e40af" stroke-width="2"/>
+            <circle cx="8" cy="12" r="1.6" fill="#1e40af"/>
+            <path d="M13 12 H22 V15 H19 V12 M16 12 V14.5" fill="none" stroke="#1e40af" stroke-width="2" stroke-linecap="square"/>
+          </svg>
+          <span class="key-label">JWKS<br>(Signing Keys)</span>
+        </div>
+      </div>
+
+    </div>
+    <!-- ░░░ /BOTTOM ROW ░░░ -->
+  </section>
+
+
+  <!-- ── KEY FEATURES + TECH STACK ─────────────────────────────────────── -->
+  <section class="bottom">
+    <div class="panel features">
+      <h2>Key Features</h2>
+      <ul>
+        <li>Authorization-code flow with PKCE (S256) — SPA best practice per RFC 7636</li>
+        <li>Access &amp; refresh token lifecycle (cache → silent refresh → interactive fallback)</li>
+        <li>Microsoft Graph: user profile &amp; group memberships (delegated permissions)</li>
+        <li>Protected route with client-side AuthGuard (UX boundary)</li>
+        <li>Server-side ID token validation against Microsoft JWKS (security boundary)</li>
+        <li>Sign out &amp; session cache cleanup at IdP</li>
+      </ul>
+    </div>
+
+    <div class="panel stack">
+      <h2>Tech Stack</h2>
+      <div class="stack-grid">
+        <!-- ░ Column 1 ░ -->
+        <div class="stack-item">
+          <span class="stack-icon">
+            <svg viewBox="0 0 30 30" width="28" height="28" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="15" cy="15" r="14.5" fill="#000"/>
+              <text x="15" y="18.5" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="7.5" font-weight="900" fill="white" letter-spacing="-0.2">NEXT</text>
+            </svg>
+          </span>
+          Next.js 16 (App Router)
+        </div>
+        <div class="stack-item">
+          <span class="stack-icon">
+            <svg viewBox="-15 -15 30 30" width="28" height="28" xmlns="http://www.w3.org/2000/svg">
+              <circle r="2.2" fill="#61dafb"/>
+              <ellipse rx="12" ry="4.5" fill="none" stroke="#61dafb" stroke-width="1.4"/>
+              <ellipse rx="12" ry="4.5" fill="none" stroke="#61dafb" stroke-width="1.4" transform="rotate(60)"/>
+              <ellipse rx="12" ry="4.5" fill="none" stroke="#61dafb" stroke-width="1.4" transform="rotate(120)"/>
+            </svg>
+          </span>
+          React 19
+        </div>
+        <div class="stack-item">
+          <span class="stack-icon">
+            <img src="infographic-assets/typescript-logo.png" alt="TypeScript">
+          </span>
+          TypeScript 5
+        </div>
+        <div class="stack-item">
+          <span class="stack-icon">
+            <img src="infographic-assets/tailwind-logo.png" alt="Tailwind CSS">
+          </span>
+          Tailwind CSS v4
+        </div>
+        <div></div>
+        <!-- ░ Column 2 ░ -->
+        <div class="stack-item">
+          <span class="stack-icon">
+            <svg viewBox="0 0 30 30" width="28" height="28" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="15" cy="15" r="14.5" fill="#7c3aed"/>
+              <rect x="9" y="14" width="12" height="10" rx="1.5" fill="white"/>
+              <path d="M11.5 14 V 11 a3.5 3.5 0 0 1 7 0 V 14" fill="none" stroke="white" stroke-width="1.8"/>
+              <circle cx="15" cy="18" r="1.3" fill="#7c3aed"/>
+              <rect x="14.4" y="18" width="1.2" height="3" fill="#7c3aed"/>
+            </svg>
+          </span>
+          @azure/msal-browser
+        </div>
+        <div class="stack-item">
+          <span class="stack-icon">
+            <svg viewBox="0 0 30 30" width="28" height="28" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="15" cy="15" r="14.5" fill="#2563eb"/>
+              <circle cx="15" cy="12" r="4" fill="white"/>
+              <path d="M5,25 C 7,18 23,18 25,25 Z" fill="white"/>
+            </svg>
+          </span>
+          @azure/msal-react
+        </div>
+        <div class="stack-item">
+          <span class="stack-icon wide">
+            <svg viewBox="0 0 40 24" width="40" height="24" xmlns="http://www.w3.org/2000/svg">
+              <rect width="40" height="24" rx="12" fill="#ef4444"/>
+              <text x="20" y="16.5" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="10" font-weight="700" fill="white" letter-spacing="0.6">jose</text>
+            </svg>
+          </span>
+          jose (JWT)
+        </div>
+        <div class="stack-item">
+          <span class="stack-icon">
+            <img src="infographic-assets/entra-id-logo.png" alt="Microsoft Entra ID">
+          </span>
+          Microsoft Entra ID
+        </div>
+        <div class="stack-item">
+          <span class="stack-icon">
+            <img src="infographic-assets/graph-logo.png" alt="Microsoft Graph">
+          </span>
+          Microsoft Graph
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ─────────────────────────────────────────────────────────── -->
+  <footer class="footer">
+    <div class="head">Real Security. Real Boundaries.</div>
+    <div class="body">
+      The server doesn&apos;t trust the client. It verifies.<br>
+      This is the pattern every secure enterprise app should follow.
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>
